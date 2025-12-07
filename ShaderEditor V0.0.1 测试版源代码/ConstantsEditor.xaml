@@ -1,0 +1,367 @@
+﻿<Window x:Class="ShaderEditor.ConstantsEditor"       
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:local="clr-namespace:ShaderEditor"
+        mc:Ignorable="d"
+        Title="ShaderEditor (by 丛雨绯闻男友) V0.0.1 测试版  常量编辑器" 
+        xmlns:converters="clr-namespace:ShaderEditor.Converters"
+        Height="900" Width="1600"
+        Background="#F9F9F9"
+        WindowState="Maximized">
+
+
+    <Window.Resources>
+        <!-- 新手友好的样式调整 -->
+        <Style x:Key="GroupExpanderStyle" TargetType="Expander">
+            <Setter Property="HeaderTemplate">
+                <Setter.Value>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal" Margin="5,2">
+                            <materialDesign:PackIcon Kind="{Binding Tag}" Width="16" Height="16" Margin="0,0,5,0"/>
+                            <TextBlock Text="{Binding}" FontSize="14" FontWeight="Medium" Foreground="#2D3436"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Margin" Value="0,8"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="BorderBrush" Value="#E0E0E0"/>
+            <Setter Property="Padding" Value="5"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="3" Opacity="0.1" ShadowDepth="1"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="HelpTextStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="#636E72"/>
+            <Setter Property="Margin" Value="0,3,0,8"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
+
+        <Style x:Key="ActionButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#0984E3"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Margin" Value="0,5,0,0"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#0652DD"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="SecondaryButtonStyle" TargetType="Button" BasedOn="{StaticResource ActionButtonStyle}">
+            <Setter Property="Background" Value="#F1F2F6"/>
+            <Setter Property="Foreground" Value="#2D3436"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#E0E0E0"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ConfigLabelStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="#2D3436"/>
+            <Setter Property="Margin" Value="0,10,0,5"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+        </Style>
+
+        <Style x:Key="TextBoxStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#CED6E0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Style.Triggers>
+                <Trigger Property="IsReadOnly" Value="True">
+                    <Setter Property="Background" Value="#F8F9FA"/>
+                    <Setter Property="Foreground" Value="#636E72"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="8">
+        <!-- 顶部新手引导栏 -->
+        <Border x:Name="NoviceHintBar" CornerRadius="5" BorderThickness="1" BorderBrush="#EEEEEE">
+            <Grid Grid.Row="0" Background="#E8F4FD"  Margin="0,0,0,10">
+                <StackPanel Orientation="Horizontal" >
+                    <materialDesign:PackIcon Kind="Lightbulb" Foreground="#0984E3" Width="18" Height="18" Margin="0,0,8,0"/>
+                    <TextBlock FontSize="12" Foreground="#2D3436">
+                    提示：请导入名为constants.fxh的常量文件，编辑器会自动载入对应解释文件，同时你也可以手动载入解释文件，编辑后可保存到源文件或导出为其他格式。
+                    </TextBlock>
+                    <Button Style="{StaticResource SecondaryButtonStyle}" Height="24" Margin="15,0,0,0" FontSize="11">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="HelpCircle" Width="14" Height="14" Margin="0,0,5,0"/>
+                            <TextBlock>查看教程</TextBlock>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 主布局 -->
+        <Grid Margin="0,25,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="320"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="50"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="35"/>
+            </Grid.RowDefinitions>
+
+            <!-- 左侧配置区（新手友好型） -->
+            <Border Grid.Column="0" Grid.RowSpan="3" Background="White" BorderThickness="1" BorderBrush="#E0E0E0" CornerRadius="6">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="10">
+                    <StackPanel>
+                        <TextBlock Text="编辑器工具" FontSize="16" FontWeight="SemiBold"  Margin="0,5,0,15" Foreground="#2D3436"/>
+
+                        <!-- 导入区域 -->
+                        <Expander Header="文件导入" Style="{StaticResource GroupExpanderStyle}" Tag="Import">
+                            <StackPanel>
+                                <TextBlock Text="导入常量文件" Style="{StaticResource ConfigLabelStyle}"/>
+                                <TextBlock Text="仅支持名为constants.fxh的HLSL常量定义文件" Style="{StaticResource HelpTextStyle}"/>
+
+                                <Button x:Name="ImportButton" 
+                                        Click="ImportButton_Click" Style="{StaticResource ActionButtonStyle}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="FileImport" Width="16" Height="16" Margin="0,0,5,0"/>
+                                        <TextBlock>选择文件导入</TextBlock>
+                                    </StackPanel>
+                                </Button>
+
+                                <Button x:Name="LoadExplanationButton"  Click="LoadExplanationButton_Click" Style="{StaticResource ActionButtonStyle}" Margin="0,5,0,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="HelpCircle" Width="16" Height="16" Margin="0,0,5,0"/>
+                                        <TextBlock>加载解释文件</TextBlock>
+                                    </StackPanel>
+                                </Button>
+
+                                <TextBlock Text="已导入文件路径" Style="{StaticResource ConfigLabelStyle}"/>
+                                <TextBox x:Name="FilePathTextBox" Height="32" 
+                                         IsReadOnly="True" Style="{StaticResource TextBoxStyle}"/>
+
+                                <TextBlock Text="文件内容预览" Style="{StaticResource ConfigLabelStyle}"/>
+                                <TextBlock Text="导入后可在这里查看文件内容" Style="{StaticResource HelpTextStyle}"/>
+                                <TextBox x:Name="DocumentContentTextBox" Height="150" 
+                                         IsReadOnly="True" AcceptsReturn="True" 
+                                         TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
+                                         Style="{StaticResource TextBoxStyle}"/>
+                            </StackPanel>
+                        </Expander>
+
+                        <!-- 显示配置 -->
+                        <Expander Header="显示设置" Style="{StaticResource GroupExpanderStyle}" Tag="Settings">
+                            <StackPanel>
+                                <TextBlock Text="界面显示选项" Style="{StaticResource ConfigLabelStyle}"/>
+
+                                <StackPanel Orientation="Horizontal" Margin="0,5,0,0" VerticalAlignment="Center" Height="30">
+                                    <TextBlock Text="显示参数描述" Width="100" FontSize="12"/>
+                                    <CheckBox x:Name="ShowDescriptionCheck" IsChecked="True"
+                                              Checked="ShowDescriptionCheck_Checked"
+                                              Unchecked="ShowDescriptionCheck_Unchecked">
+                                        <CheckBox.ToolTip>
+                                            <ToolTip>显示每个常量的说明文字（适合新手）</ToolTip>
+                                        </CheckBox.ToolTip>
+                                    </CheckBox>
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal" Margin="0,5,0,0" VerticalAlignment="Center" Height="30">
+                                    <TextBlock Text="自动换行" Width="100" FontSize="12"/>
+                                    <CheckBox x:Name="WordWrapCheck" IsChecked="True"
+                                              Checked="WordWrapCheck_Checked"
+                                              Unchecked="WordWrapCheck_Unchecked">
+                                        <CheckBox.ToolTip>
+                                            <ToolTip>内容过长时自动换行显示</ToolTip>
+                                        </CheckBox.ToolTip>
+                                    </CheckBox>
+                                </StackPanel>
+
+                                <Button x:Name="ResetViewButton" 
+                                        Style="{StaticResource SecondaryButtonStyle}" Margin="0,10,0,0"
+                                        Click="RefreshButton_Click">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16" Margin="0,0,5,0"/>
+                                        <TextBlock>重置界面</TextBlock>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Expander>
+
+                        <!-- 导出配置 -->
+                        <Expander Header="文件导出" Style="{StaticResource GroupExpanderStyle}" Tag="Export">
+                            <StackPanel>
+                                <TextBlock Text="导出选项" Style="{StaticResource ConfigLabelStyle}"/>
+                                <TextBlock Text="将编辑后的常量导出为指定格式" Style="{StaticResource HelpTextStyle}"/>
+
+                                <Button x:Name="ExportButton" 
+                                        Style="{StaticResource ActionButtonStyle}"
+                                        Click="ExportButton_Click">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="FileExport" Width="16" Height="16" Margin="0,0,5,0"/>
+                                        <TextBlock>导出当前配置</TextBlock>
+                                    </StackPanel>
+                                </Button>
+
+                                <Button x:Name="SaveButton" Click="SaveButton_Click" Style="{StaticResource ActionButtonStyle}" Margin="0,5,0,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="FileExport" Width="16" Height="16" Margin="0,0,5,0"/>
+                                        <TextBlock>保存到原文件</TextBlock>
+                                    </StackPanel>
+                                </Button>
+
+                                <StackPanel Orientation="Horizontal" Margin="0,10,0,0" VerticalAlignment="Center" Height="30">
+                                    <TextBlock Text="导出格式" Width="100" FontSize="12"/>
+                                    <ComboBox x:Name="ExportFormatCombo" SelectedIndex="0" Width="150" 
+                                              Style="{StaticResource {x:Type ComboBox}}">
+                                        <ComboBoxItem Content="FXH格式 (.fxh)">
+                                            <ComboBoxItem.ToolTip>HLSL shader使用的头文件格式</ComboBoxItem.ToolTip>
+                                        </ComboBoxItem>
+                                        <ComboBoxItem Content="JSON格式 (.json)">
+                                            <ComboBoxItem.ToolTip>通用数据交换格式，支持多数引擎</ComboBoxItem.ToolTip>
+                                        </ComboBoxItem>
+                                        <ComboBoxItem Content="TXT格式 (.txt)">
+                                            <ComboBoxItem.ToolTip>纯文本格式，适合快速查看</ComboBoxItem.ToolTip>
+                                        </ComboBoxItem>
+                                    </ComboBox>
+                                </StackPanel>
+                            </StackPanel>
+                        </Expander>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- 右侧内容区 -->
+            <!-- 顶部工具栏 -->
+            <StackPanel Grid.Column="1" Grid.Row="0" Orientation="Horizontal" Margin="10,0" VerticalAlignment="Center">
+                <Button 
+                    Width="110" 
+                    Height="32"
+                    ToolTip="将所有参数恢复到初始状态"
+                    Click="RefreshButton_Click" 
+                    Style="{StaticResource SecondaryButtonStyle}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16" Margin="0,0,5,0"/>
+                        <TextBlock>恢复默认</TextBlock>
+                    </StackPanel>
+                </Button>
+
+                <Separator Width="10" Visibility="Collapsed"/>
+
+                <!-- 搜索框（带提示） -->
+                <DockPanel Width="250" Height="32" Margin="15,0,0,0">
+                    <TextBox x:Name="SearchBox" 
+                             TextChanged="SearchBox_TextChanged"
+                             DockPanel.Dock="Left"
+                             Width="220"
+                             Style="{StaticResource TextBoxStyle}"
+                             ToolTip="搜索常量名称、值或描述"
+                             />
+                    <Button x:Name="ClearSearchBtn" 
+                            Content="×" 
+                            Width="32"
+                            Visibility="Collapsed"
+                            Click="ClearSearchBtn_Click"
+                            Style="{StaticResource SecondaryButtonStyle}"/>
+                </DockPanel>
+
+                <!-- 新手模式切换 -->
+            </StackPanel>
+
+            <!-- 常量编辑区 -->
+            <Border Grid.Column="1" Grid.Row="1" Background="White" 
+                    BorderThickness="1" BorderBrush="#E0E0E0" CornerRadius="6" Margin="10,5,10,5">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="15">
+                    <StackPanel>
+                        <StackPanel x:Name="InitialHintPanel" Visibility="Visible">
+                            <materialDesign:PackIcon Kind="FileQuestion" Width="64" Height="64" Foreground="#BDC3C7" Margin="0,50,0,20" HorizontalAlignment="Center"/>
+                            <TextBlock Text="尚未导入常量文件" FontSize="18" FontWeight="Medium" Foreground="#2D3436" HorizontalAlignment="Center"/>
+                            <TextBlock Text="仅支持名为constants.fxh的HLSL常量定义文件" FontSize="14" Foreground="#636E72" HorizontalAlignment="Center" Margin="0,10,0,30" Width="400" TextAlignment="Center"/>
+                            <Button Click="ImportButton_Click" Style="{StaticResource ActionButtonStyle}" HorizontalAlignment="Center">
+                                <TextBlock>去导入文件</TextBlock>
+                            </Button>
+                        </StackPanel>
+
+                        <!-- 常量编辑表格（导入后显示） -->
+                        <DataGrid x:Name="ConstantsGrid" Visibility="Collapsed"
+                                AutoGenerateColumns="False"
+                                CanUserAddRows="False"
+                                RowHeight="35"
+                                GridLinesVisibility="Horizontal"
+                                Background="Transparent"
+                                BorderThickness="0">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="所属类型" Width="100" Binding="{Binding Explanation.Category}" IsReadOnly="True"/>
+                                <!-- 新手模式：显示友好名称（隐藏原始名称） -->
+                                <DataGridTextColumn Header="参数名称" Width="150"  Binding="{Binding Explanation.DisplayName}" IsReadOnly="True"/>
+
+                                <!-- 原始名称（新手模式隐藏，专业模式显示） -->
+                                <DataGridTextColumn Header="原始名称" Width="150" Binding="{Binding Name}" Visibility="Collapsed" IsReadOnly="True"/>
+
+                                <!-- 当前值（根据新手可编辑属性控制权限） -->
+                                <DataGridTextColumn Header="当前值" Width="120">
+                                    <DataGridTextColumn.Binding>
+                                        <Binding Path="Value" Mode="TwoWay">
+                                            <Binding.ValidationRules>
+                                                <!-- 保留值验证（非空等基础校验），可选 -->
+                                                <local:ConstantValueValidationRule/>
+                                            </Binding.ValidationRules>
+                                        </Binding>
+                                    </DataGridTextColumn.Binding>
+                                    <!-- 强制关闭只读，所有行均可编辑 -->
+                                    <DataGridTextColumn.IsReadOnly>False</DataGridTextColumn.IsReadOnly>
+                                </DataGridTextColumn>
+
+                                <!-- 类型（来自解释文件） -->
+                                <DataGridTextColumn Header="类型" Width="80" Binding="{Binding Type}" IsReadOnly="True"/>
+
+                                <!-- 取值范围（来自解释文件） -->
+                                <DataGridTextColumn Header="取值范围" Width="120" Binding="{Binding Explanation.ValueRange}" IsReadOnly="True"/>
+
+                                <!-- 描述（来自解释文件，更详细） -->
+                                <DataGridTextColumn Header="描述" Width="*" Binding="{Binding Explanation.Description}" IsReadOnly="True"/>
+
+                                <!-- 状态（来自解释文件） -->
+                                <DataGridTextColumn Header="状态" Width="80" Binding="{Binding Explanation.Status}" IsReadOnly="True"/>
+                                <!-- 变量状态（来自常量文件） -->
+                                <DataGridTextColumn Header="变量状态" Binding="{Binding StaticStatus}" IsReadOnly="True" Width="80"/>
+                                <!-- 变量类型（来自常量文件） -->
+                                <DataGridTextColumn Header="变量类型" Binding="{Binding ConstType}" IsReadOnly="True" Width="80"/>
+
+                                <!-- 重置按钮（保持不变） -->
+                                <DataGridTemplateColumn Header="操作" Width="80">
+                                    <!-- 按钮模板不变... -->
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- 底部状态栏 -->
+            <Border Grid.Column="1" Grid.Row="2" Background="White" 
+                    BorderThickness="1,1,1,1" BorderBrush="#E0E0E0" CornerRadius="4" Margin="10,5,10,0">
+                <StackPanel Orientation="Horizontal" Margin="10,5" VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="InformationOutline" Width="16" Height="16" Foreground="#0984E3" Margin="0,0,5,0"/>
+                    <TextBlock x:Name="StatusText" FontSize="12" Foreground="#2D3436" Text="就绪 - 请导入常量文件开始编辑"/>
+                    <TextBlock Text=" | " FontSize="12" Foreground="#E0E0E0" Margin="5,0"/>
+                    <TextBlock x:Name="EditPermissionText" FontSize="12" Foreground="#636E72" Text="编辑状态: 未加载文件"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>

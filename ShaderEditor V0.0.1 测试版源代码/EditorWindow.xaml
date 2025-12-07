@@ -1,0 +1,97 @@
+﻿<Window x:Class="ShaderEditor.EditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/wpf/xaml/themes"
+        xmlns:local="clr-namespace:ShaderEditor"
+        Style="{StaticResource MaterialDesignWindow}"
+        mc:Ignorable="d"
+        Title="ShaderEditor (by 丛雨绯闻男友) V0.0.1 测试版  ShaderEditor窗口" Height="900" Width="1600"
+        WindowState="Maximized">
+
+    <Window.DataContext>
+        <local:EditorWindowViewModel/>
+    </Window.DataContext>
+
+    <Grid Margin="20">
+        <!-- 布局：步骤条 → 按钮 → 内容区 -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="80"/>
+            <!-- 步骤条（带连接线） -->
+            <RowDefinition Height="Auto"/>
+            <!-- 上一步/下一步按钮 -->
+            <RowDefinition Height="*"/>
+            <!-- 预留内容区 -->
+        </Grid.RowDefinitions>
+
+        <!-- 1. 步骤条（横向排列，带圆形和连接线） -->
+        <ItemsControl Grid.Row="0" ItemsSource="{Binding AllShaderSteps}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <!-- 横向排列步骤 -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type local:ShaderStep}">
+                    <!-- 垂直StackPanel：圆形在上，文字在下，整体水平居中 -->
+                    <StackPanel Orientation="Vertical" HorizontalAlignment="Center" Width="120">
+
+                        <!-- 1. 圆形步骤标识（位于顶部，水平居中） -->
+                        <Grid Width="40" Height="40" HorizontalAlignment="Center">
+                 <Ellipse 
+                    Fill="{Binding Path= ., Converter={local:StepToBrushConverter}, ConverterParameter='#2196F3,#E0E0E0', Mode=OneWay}"/>
+                            <TextBlock 
+                    Text="{Binding StepIndex, StringFormat={}{0}+1}"
+                    Foreground="White" FontSize="14" FontWeight="Bold"
+                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Grid>
+
+                        <!-- 2. 文字部分（位于圆形正下方，水平居中） -->
+                        <StackPanel Orientation="Vertical" HorizontalAlignment="Center" Margin="0,8,0,0">
+                            <!-- 英文行 -->
+                            <TextBlock 
+                    Text="{Binding EnglishName}" 
+                    FontSize="11" Foreground="#666" TextAlignment="Center" MaxWidth="100"/>
+                            <!-- 中文行 -->
+                            <TextBlock 
+                    Text="{Binding ChineseName}" 
+                    FontSize="12" Foreground="#333" TextAlignment="Center" MaxWidth="100" Margin="0,2,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- 2. 上一步/下一步按钮（图3样式） -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
+            <Button Content="上一步" Width="120" Height="40"
+                    Background="#2196F3" Foreground="Green" BorderThickness="0"
+                    Command="{Binding GoPreviousCommand}"
+                    IsEnabled="{Binding CanGoPrevious}"/>
+            <Button Content="下一步" Width="120" Height="40" Margin="20,0,0,0"
+                    Background="#2196F3" Foreground="White" BorderThickness="0"
+                    Command="{Binding GoNextCommand}"
+                    IsEnabled="{Binding CanGoNext}"/>
+        </StackPanel>
+
+        <!-- 3. 预留内容区（可显示当前步骤的子项，如图2的VS_INPUT等） -->
+        <!-- 预留区域：左右两列分割 -->
+        <Grid Grid.Row="2" Margin="0,20,0,0">
+            <!-- 定义两列（宽度各占50%，可按需调整） -->
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Margin="0,0,10,0" BorderBrush="#E0E0E0"  BorderThickness="1"  CornerRadius="5">
+                <TextBlock  Text="正在等待配置文件加载"  HorizontalAlignment="Center" VerticalAlignment="Center"  Foreground="#666"/>
+            </Border>
+
+            <Border  Grid.Column="1" Margin="10,0,0,0" BorderBrush="#E0E0E0"  BorderThickness="1"  CornerRadius="5">
+                <TextBlock Text="正在等待区域1提供Shader配置参数"  HorizontalAlignment="Center"  VerticalAlignment="Center"  Foreground="#666"/>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>
