@@ -28,3 +28,6 @@ ShaderEditor V0.0.2 预更新内容<br>
 2.实装shader生成器和纹理库管理器<br>
 3.使用前需安装.NET 10(运行时)和WebView2(运行时)<br>
 4.后续可能会将.NET 10(运行时)和WebView2(运行时)打包进软件安装程序，安装程序运行时会自动检测依赖以自动安装依赖框架<br>
+<br>
+.NET 10(运行时)下载链接：https://dotnet.microsoft.com/zh-cn/download/dotnet/thank-you/runtime-desktop-10.0.1-windows-x64-installer<br>
+WebView(运行时)下载链接：https://msedge.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/c55f85b8-c7f2-4d7e-849d-cd4bfe16b28a/MicrosoftEdgeWebView2RuntimeInstallerX64.exe<br>
