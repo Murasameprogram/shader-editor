@@ -14,7 +14,7 @@ ShaderEditor V0.0.1 测试版发布 <br>
 <br>
 
 2025年12月11日<br>
-ShaderEdito技术栈变更以及bug修复日志
+ShaderEdito技术栈变更以及bug修复日志<br>
 1.ShaderEditor在V0.0.2版本将会改用.NET 10框架<br>
 2.为了弥补WPF控件生态在“现代化”和“丰富性”上的瓶颈，后续将会使用Blazor生态弥补这一点<br>
 3.从V0.0.2版本开始，软件将会采用.NET 10 + WPF+Blazor web的技术栈<br>
